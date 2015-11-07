@@ -25,4 +25,8 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:23.1.0'
     compile 'com.android.support:design:23.1.0'
+    compile 'com.squareup.okhttp:okhttp:2.5.0'
+//    compile "org.apache.httpcomponents:httpmime:4.2.3"
+//    compile 'commons-httpclient:commons-httpclient:2.0.2'
+//    compile 'net.databinder:dispatch-http_2.9.1:0.8.10'
 }

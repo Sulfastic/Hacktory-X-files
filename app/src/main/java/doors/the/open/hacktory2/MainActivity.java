@@ -10,15 +10,21 @@ import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.EditText;
 
 import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.EstimoteSDK;
 import com.estimote.sdk.Nearable;
-import com.estimote.sdk.SecureRegion;
 import com.estimote.sdk.SystemRequirementsChecker;
+import com.squareup.okhttp.Callback;
+import com.squareup.okhttp.Headers;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
 
+
+import java.io.IOException;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -26,6 +32,10 @@ public class MainActivity extends AppCompatActivity {
     private BeaconManager beaconManager;
     private String scanId;
     private EditText editText;
+    OkHttpClient client;
+    Request getRequest;
+    Response response;
+    private Button button;
 
 
 //    // Should be invoked in #onStart.
@@ -40,10 +50,19 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        button  = (Button) findViewById(R.id.button);
+        button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                try{
+                    getOperationHttp();
+                }catch (IOException e){}
+            }
+        });
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         editText = (EditText) findViewById(R.id.editText);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -54,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Context context =getApplicationContext();
+        Context context = getApplicationContext();
         //  App ID & App Token can be taken from App section of Estimote Cloud.
         EstimoteSDK.initialize(context, "epempeyo-gmail-com-s-your--abm", "3a82149c5827ab3ec99d94f6ef3f9d12");
 // Optional, debug logging.
@@ -70,18 +89,17 @@ public class MainActivity extends AppCompatActivity {
 //                Log.d("costam", "Discovered nearables: " + nearables);
                 for (int i = 0; i < nearables.size(); i++) {
                     if (nearables.get(i).identifier.equals("d14e34d01b2d866c")) {
-                        Log.d("costam", "Rssi: "+nearables.get(i).rssi);
+                        Log.d("costam", "Rssi: " + nearables.get(i).rssi);
                         if (nearables.get(i).rssi > -90) {
-                            Log.d("costam", "********Blisko*********");
-
-                            editText.requestFocus();
-                            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                            imm.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT);
+                            try{
+                                getOperationHttp();
+                                break;
+                            }catch (IOException e){}
                         }
-                    }
                 }
             }
-        });
+        }
+    });
 
         beaconManager.connect(new BeaconManager.ServiceReadyCallback()
 
@@ -94,6 +112,7 @@ public class MainActivity extends AppCompatActivity {
         );
 
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -115,5 +134,33 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    void getOperationHttp() throws IOException
+    {
+        client = new OkHttpClient();
+        getRequest = new Request.Builder()
+                .url("http://aa3d84fb.ngrok.io/63abf6d43b8f84414c7df1f330c998b22cf0d6c3c8dabe64cc8a4c575d96b8fd")
+                .build();
+
+        client.newCall(getRequest).enqueue(new Callback() {
+            @Override
+            public void onFailure(Request request, IOException e) {
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(Response response) throws IOException {
+                if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+
+                Headers responseHeaders = response.headers();
+                for (int i = 0; i < responseHeaders.size(); i++) {
+                    System.out.println(responseHeaders.name(i) + ": " + responseHeaders.value(i));
+                }
+
+                System.out.println(response.body().string());
+            }
+        });
+//        return response.body().string();
     }
 }
