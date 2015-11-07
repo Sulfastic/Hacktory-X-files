@@ -19,13 +19,20 @@ import com.estimote.sdk.Nearable;
 import com.estimote.sdk.SystemRequirementsChecker;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.Headers;
+import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.util.List;
+import java.util.jar.JarException;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -36,6 +43,8 @@ public class MainActivity extends AppCompatActivity {
     Request getRequest;
     Response response;
     private Button button;
+    MediaType MEDIA_TYPE_MARKDOWN;
+
 
 
 //    // Should be invoked in #onStart.
@@ -51,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        MEDIA_TYPE_MARKDOWN = MediaType.parse("text/x-markdown; charset=utf-8");
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -93,7 +103,15 @@ public class MainActivity extends AppCompatActivity {
                         if (nearables.get(i).rssi > -90) {
                             try{
                                 getOperationHttp();
-                                break;
+//                                String temp =
+                                checkWithDatabase(""+nearables.get(i).identifier);
+//                            Log.d("costam",temp);
+                            break;
+//                                if(!temp.equals("Failed")){
+//
+//                                    break;
+//                                }
+
                             }catch (IOException e){}
                         }
                 }
@@ -158,9 +176,68 @@ public class MainActivity extends AppCompatActivity {
                     System.out.println(responseHeaders.name(i) + ": " + responseHeaders.value(i));
                 }
 
-                System.out.println(response.body().string());
+                Log.d("costam", response.body().string());
             }
         });
 //        return response.body().string();
     }
+
+    void checkWithDatabase(String identifier){
+
+//        OkHttpClient client = new OkHttpClient();
+//
+//            String postBody = identifier;
+//
+//            Request request = new Request.Builder()
+//                    .url("http://192.168.3.135:8080/")/****************/
+//                    .post(RequestBody.create(MEDIA_TYPE_MARKDOWN, postBody))
+//                    .build();
+//
+//            try {
+//                Response response = client.newCall(request).execute();
+//                if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+//
+//            return response.body().string();
+//            }catch (IOException e){
+//                return "Failed";
+//            }
+        client = new OkHttpClient();
+        getRequest = new Request.Builder()
+                .url("http://207c64c8.ngrok.io/" + identifier)
+                .build();
+
+        client.newCall(getRequest).enqueue(new Callback() {
+            @Override
+            public void onFailure(Request request, IOException e) {
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(Response response) throws IOException {
+                if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+
+                Headers responseHeaders = response.headers();
+                for (int i = 0; i < responseHeaders.size(); i++) {
+                    System.out.println(responseHeaders.name(i) + ": " + responseHeaders.value(i));
+                }
+
+                Log.d("costam", response.body().string());
+            }
+        });
+//        try {
+//            return response.body().string();
+//        }catch (IOException e){}
+//        return "o nie!";
+    }
+
+//    boolean parseJson() throws JSONException{
+//        JSONObject obj = new JSONObject(" .... ");
+//        String pageName = obj.getJSONObject("pageInfo").getString("pageName");
+//
+//        JSONArray arr = obj.getJSONArray("posts");
+//        for (int i = 0; i < arr.length(); i++)
+//        {
+//            String post_id = arr.getJSONObject(i).getString("post_id");
+//        }
+//    }
 }
